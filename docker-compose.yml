@@ -1,0 +1,71 @@
+version: "3.10"
+services:
+  fastapi:
+    container_name: fastapi
+    restart: unless-stopped
+    env_file:
+      - .env
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      labels:
+        - fastapi
+    volumes:
+        - .:/code
+    command:
+      - /bin/sh
+      - -c
+      - |
+        gunicorn main:app --workers 2 \
+        --worker-class uvicorn.workers.UvicornWorker -b 0.0.0.0:5000
+
+    ports:
+      - 5000:5000
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: redis:latest
+    container_name: fastapi_redis
+    ports:
+      - 6379:6379
+  
+  postgres:
+    image: postgres:latest
+    container_name: fastapi_postgres
+    ports:
+      - 5432:5432
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: fastapi_caddy
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "$PORT:$PORT"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+    depends_on:
+      - fastapi
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
