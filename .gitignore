@@ -6,3 +6,4 @@ core/py_env.py
 .mypy_cache
 .pytest_cache
 postgres
+.env
