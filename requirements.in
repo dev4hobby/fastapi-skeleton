@@ -7,7 +7,6 @@ bcrypt
 pyjwt
 tortoise-orm[asyncpg]
 aerich
-asyncpg
 itsdangerous
 python-dotenv
 authlib
